@@ -113,6 +113,9 @@ export interface Settings {
   /// IDE mode setting configured via slash command toggle.
   ideMode?: boolean;
 
+  // Global context file path
+  globalContextFilePath?: string;
+
   // Setting for disabling auto-update.
   disableAutoUpdate?: boolean;
 

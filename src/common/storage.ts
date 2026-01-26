@@ -31,6 +31,7 @@ export interface IConfigStorageRefer {
     /** 按 Google 账号存储的 GCP 项目 ID / GCP project IDs stored per Google account */
     accountProjects?: Record<string, string>;
     yoloMode?: boolean;
+    globalContextFilePath?: string;
   };
   'acp.config': {
     [backend in AcpBackend]?: {

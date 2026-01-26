@@ -232,6 +232,26 @@ const GeminiModalContent: React.FC<GeminiModalContentProps> = ({ onRequestClose 
                 <Input className='aion-input' placeholder={t('settings.googleCloudProjectPlaceholder')} />
               </Form.Item>
 
+              <Form.Item label={t('settings.globalContextMd', { defaultValue: 'Global Context MD' })} field='globalContextFilePath' layout='vertical'>
+                <div className='flex gap-8px'>
+                  <Input className='aion-input' placeholder={t('settings.globalContextMdPlaceholder', { defaultValue: 'Select a global Markdown file for context...' })} />
+                  <Button
+                    type='outline'
+                    onClick={async () => {
+                      const result = await ipcBridge.dialog.showOpen.invoke({
+                        properties: ['openFile'],
+                        filters: [{ name: 'Markdown', extensions: ['md'] }],
+                      });
+                      if (result && result.length > 0) {
+                        form.setFieldValue('globalContextFilePath', result[0]);
+                      }
+                    }}
+                  >
+                    {t('common.browse', { defaultValue: 'Browse' })}
+                  </Button>
+                </div>
+              </Form.Item>
+
               <Form.Item label={t('settings.yoloMode')} field='yoloMode' layout='horizontal'>
                 {(value, form) => (
                   <div

@@ -14,6 +14,7 @@ import { addMessage, addOrUpdateMessage, nextTickToLocalFinish } from '../messag
 import BaseAgentManager from './BaseAgentManager';
 import { handlePreviewOpenEvent } from '../utils/previewUtils';
 import { getOauthInfoWithCache } from '@office-ai/aioncli-core';
+import * as fs from 'fs';
 
 // gemini agent管理器类
 type UiMcpServerConfig = {
@@ -91,6 +92,18 @@ export class GeminiAgentManager extends BaseAgentManager<{
           // If account retrieval fails, don't set projectId, let system use default
         }
 
+        // 加载全局规则 / Load global rules
+        let globalRules = '';
+        if (config?.globalContextFilePath && fs.existsSync(config.globalContextFilePath)) {
+          try {
+            globalRules = fs.readFileSync(config.globalContextFilePath, 'utf-8');
+          } catch (e) {
+            console.error('[GeminiAgentManager] Failed to read global context file:', e);
+          }
+        }
+
+        const finalPresetRules = globalRules ? `${globalRules}\n\n${this.presetRules || ''}` : this.presetRules;
+
         return this.start({
           ...config,
           GOOGLE_CLOUD_PROJECT: projectId,
@@ -100,8 +113,8 @@ export class GeminiAgentManager extends BaseAgentManager<{
           webSearchEngine: data.webSearchEngine,
           mcpServers,
           contextFileName: this.contextFileName,
-          presetRules: this.presetRules,
-          contextContent: this.contextContent,
+          presetRules: finalPresetRules,
+          contextContent: finalPresetRules || this.contextContent,
           // Skills 通过 SkillManager 加载 / Skills loaded via SkillManager
           skillsDir: getSkillsDir(),
           // 启用的 skills 列表，用于过滤 SkillManager 中的 skills

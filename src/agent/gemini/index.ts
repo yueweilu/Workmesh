@@ -232,6 +232,16 @@ export class GeminiAgent {
     }
     this.settings = settings;
 
+    // Load global context if configured
+    let globalRules = '';
+    if (settings.globalContextFilePath && fs.existsSync(settings.globalContextFilePath)) {
+      try {
+        globalRules = fs.readFileSync(settings.globalContextFilePath, 'utf-8');
+      } catch (e) {
+        console.error('[GeminiAgent] Failed to read global context file:', e);
+      }
+    }
+
     // 使用传入的 YOLO 设置
     const yoloMode = this.yoloMode;
 
@@ -268,9 +278,10 @@ export class GeminiAgent {
     // Inject presetRules into userMemory at initialization
     // Rules 定义系统行为规则，在会话开始时就应该生效
     // Rules define system behavior, should be effective from session start
-    if (this.presetRules) {
+    const finalPresetRules = globalRules ? `${globalRules}\n\n${this.presetRules || ''}` : this.presetRules;
+    if (finalPresetRules) {
       const currentMemory = this.config.getUserMemory();
-      const rulesSection = `[Assistant System Rules]\n${this.presetRules}`;
+      const rulesSection = `[Assistant System Rules]\n${finalPresetRules}`;
       const combined = currentMemory ? `${rulesSection}\n\n${currentMemory}` : rulesSection;
       this.config.setUserMemory(combined);
     }

@@ -540,6 +540,8 @@
     "configGuideSuffix": ".",
     "needHelpTooltip": "If you need help, please check",
     "googleCloudProjectPlaceholder": "Enter your Google Cloud Project ID",
+    "globalContextMd": "Global Context MD",
+    "globalContextMdPlaceholder": "Select a global Markdown file for context...",
     "noAvailableModels": "No available models",
     "appDescription": "Free, local, open-source GUI app for Gemini CLI",
     "helpDocumentation": "Help Documentation",
