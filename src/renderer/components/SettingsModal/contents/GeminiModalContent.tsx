@@ -129,9 +129,12 @@ const GeminiModalContent: React.FC<GeminiModalContentProps> = ({ onRequestClose 
   useEffect(() => {
     Promise.all([ConfigStorage.get('gemini.config'), ConfigStorage.get('customCss')])
       .then(([geminiConfig, customCss]) => {
+        console.log('[GeminiSettings] Loaded config:', geminiConfig); // Debug log
         const formData = {
           ...geminiConfig,
           customCss: customCss || '',
+          // Explicitly set globalContextFilePath if missing in spread (safety check)
+          globalContextFilePath: geminiConfig?.globalContextFilePath,
           // 先不设置 GOOGLE_CLOUD_PROJECT，等账号加载完再设置
           // Don't set GOOGLE_CLOUD_PROJECT yet, wait for account to load
           GOOGLE_CLOUD_PROJECT: '',
@@ -232,9 +235,11 @@ const GeminiModalContent: React.FC<GeminiModalContentProps> = ({ onRequestClose 
                 <Input className='aion-input' placeholder={t('settings.googleCloudProjectPlaceholder')} />
               </Form.Item>
 
-              <Form.Item label={t('settings.globalContextMd', { defaultValue: 'Global Context MD' })} field='globalContextFilePath' layout='vertical'>
+              <Form.Item label={t('settings.globalContextMd', { defaultValue: 'Global Context MD' })} layout='vertical'>
                 <div className='flex gap-8px'>
-                  <Input className='aion-input' placeholder={t('settings.globalContextMdPlaceholder', { defaultValue: 'Select a global Markdown file for context...' })} />
+                  <Form.Item field='globalContextFilePath' noStyle>
+                    <Input className='aion-input' placeholder={t('settings.globalContextMdPlaceholder', { defaultValue: 'Select a global Markdown file for context...' })} />
+                  </Form.Item>
                   <Button
                     type='outline'
                     onClick={async () => {

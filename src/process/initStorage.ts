@@ -520,7 +520,7 @@ const getBuiltinAssistants = (): AcpBackendConfig[] => {
 
   for (const preset of ASSISTANT_PRESETS) {
     // Cowork 默认启用的技能列表 / Default enabled skills for Cowork
-    const defaultEnabledSkills = preset.id === 'cowork' ? ['skill-creator', 'pptx', 'docx', 'pdf', 'xlsx'] : undefined;
+    const defaultEnabledSkills = preset.id === 'cowork' ? ['skill-creator', 'pptx', 'docx', 'pdf', 'xlsx'] : preset.id === 'weather-lookup' ? ['weather-lookup'] : undefined;
 
     assistants.push({
       id: `builtin-${preset.id}`,
@@ -531,8 +531,8 @@ const getBuiltinAssistants = (): AcpBackendConfig[] => {
       avatar: preset.avatar,
       // context 不再存储在配置中，而是从文件读取
       // context is no longer stored in config, read from files instead
-      // Cowork 默认启用，其他助手默认关闭 / Cowork enabled by default, others disabled
-      enabled: preset.id === 'cowork',
+      // Cowork 和 Weather Assistant 默认启用，其他助手默认关闭 / Cowork and Weather Assistant enabled by default, others disabled
+      enabled: preset.id === 'cowork' || preset.id === 'weather-lookup',
       isPreset: true,
       isBuiltin: true,
       presetAgentType: preset.presetAgentType || 'gemini',

@@ -94,15 +94,22 @@ export class GeminiAgentManager extends BaseAgentManager<{
 
         // 加载全局规则 / Load global rules
         let globalRules = '';
+        console.log('[DEBUG] Checking global context path:', config?.globalContextFilePath);
+
         if (config?.globalContextFilePath && fs.existsSync(config.globalContextFilePath)) {
           try {
             globalRules = fs.readFileSync(config.globalContextFilePath, 'utf-8');
+            console.log('[DEBUG] Global rules loaded successfully. Length:', globalRules.length);
+            console.log('[DEBUG] Rule snippet:', globalRules.substring(0, 50));
           } catch (e) {
             console.error('[GeminiAgentManager] Failed to read global context file:', e);
           }
+        } else {
+          console.log('[DEBUG] Global context file not found or path not set.');
         }
 
         const finalPresetRules = globalRules ? `${globalRules}\n\n${this.presetRules || ''}` : this.presetRules;
+        console.log('[DEBUG] Final preset rules length:', finalPresetRules?.length);
 
         return this.start({
           ...config,

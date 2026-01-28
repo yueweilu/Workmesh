@@ -143,4 +143,22 @@ export const ASSISTANT_PRESETS: AssistantPreset[] = [
       'zh-CN': '具有文件操作、文档处理和多步骤工作流规划的自主任务执行助手。',
     },
   },
+  {
+    id: 'weather-lookup',
+    avatar: '🌤️',
+    presetAgentType: 'gemini',
+    resourceDir: 'assistant/weather-lookup',
+    ruleFiles: {
+      'en-US': 'weather-lookup.md',
+      'zh-CN': 'weather-lookup.zh-CN.md',
+    },
+    nameI18n: {
+      'en-US': 'Weather Assistant',
+      'zh-CN': '天气助手',
+    },
+    descriptionI18n: {
+      'en-US': 'Get real-time weather updates for any city using the weather-lookup skill.',
+      'zh-CN': '使用天气查询技能获取全球城市的实时天气预报。',
+    },
+  },
 ];

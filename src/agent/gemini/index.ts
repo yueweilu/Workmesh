@@ -593,10 +593,12 @@ export class GeminiAgent {
     let skillsPrefix = '';
 
     if (!this.skillsIndexPrependedOnce) {
-      // 向后兼容：使用 contextContent 作为助手规则
-      // Backward compatible: use contextContent as assistant rules
-      if (this.contextContent && !this.presetRules) {
-        skillsPrefix = `[Assistant Rules - You MUST follow these instructions]\n${this.contextContent}\n\n`;
+      // 优先使用 presetRules，其次使用 contextContent
+      // Prefer presetRules, fallback to contextContent
+      const rulesContent = this.presetRules || this.contextContent;
+
+      if (rulesContent) {
+        skillsPrefix = `[Assistant Rules - You MUST follow these instructions]\n${rulesContent}\n\n`;
       }
       this.skillsIndexPrependedOnce = true;
 
