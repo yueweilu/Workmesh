@@ -11,19 +11,20 @@ import type { TProviderWithModel } from '@/common/storage';
 import { uuid } from '@/common/utils';
 import { getProviderAuthType } from '@/common/utils/platformAuthType';
 import type { CompletedToolCall, Config, GeminiClient, ServerGeminiStreamEvent, ToolCall, ToolCallRequestInfo, Turn } from '@office-ai/aioncli-core';
-import { AuthType, CoreToolScheduler, FileDiscoveryService, sessionId, refreshServerHierarchicalMemory, clearOauthClientCache } from '@office-ai/aioncli-core';
+import { AuthType, clearOauthClientCache, CoreToolScheduler, FileDiscoveryService, refreshServerHierarchicalMemory, sessionId } from '@office-ai/aioncli-core';
+import fs from 'fs';
 import { ApiKeyManager } from '../../common/ApiKeyManager';
+import { SkillManager } from './SkillManager';
 import { handleAtCommand } from './cli/atCommandProcessor';
 import { loadCliConfig } from './cli/config';
 import { loadExtensions } from './cli/extension';
+import { getGlobalTokenManager } from './cli/oauthTokenManager';
 import type { Settings } from './cli/settings';
 import { loadSettings } from './cli/settings';
+import { globalToolCallGuard, type StreamConnectionEvent } from './cli/streamResilience';
 import { ConversationToolConfig } from './cli/tools/conversation-tool-config';
 import { mapToDisplay, type TrackedToolCall } from './cli/useReactToolScheduler';
 import { getPromptCount, handleCompletedTools, processGeminiStreamEvents, startNewPrompt } from './utils';
-import { globalToolCallGuard, type StreamConnectionEvent } from './cli/streamResilience';
-import { getGlobalTokenManager } from './cli/oauthTokenManager';
-import fs from 'fs';
 
 // Global registry for current agent instance (used by flashFallbackHandler)
 let currentGeminiAgent: GeminiAgent | null = null;
@@ -46,6 +47,8 @@ interface GeminiAgent2Options {
   skillsDir?: string;
   /** 启用的 skills 列表，用于过滤 SkillManager 中的 skills / Enabled skills list for filtering skills in SkillManager */
   enabledSkills?: string[];
+  /** 是否启用自动技能创建 / Enable automatic skill creation */
+  autoCreateSkills?: boolean;
 }
 
 export class GeminiAgent {
@@ -79,6 +82,10 @@ export class GeminiAgent {
   private skillsDir?: string;
   /** 启用的 skills 列表 / Enabled skills list */
   private enabledSkills?: string[];
+  /** 技能管理器 / Skill manager */
+  private skillManager: SkillManager | null = null;
+  /** 是否启用自动技能创建 / Enable automatic skill creation */
+  private autoCreateSkills: boolean = true;
   bootstrap: Promise<void>;
   static buildFileServer(workspace: string) {
     return new FileDiscoveryService(workspace);
@@ -99,6 +106,7 @@ export class GeminiAgent {
     this.presetRules = options.presetRules;
     this.skillsDir = options.skillsDir;
     this.enabledSkills = options.enabledSkills;
+    this.autoCreateSkills = options.autoCreateSkills !== false; // 默认启用
     // 向后兼容：优先使用 presetRules，其次 contextContent / Backward compatible: prefer presetRules, fallback to contextContent
     this.contextContent = options.contextContent || options.presetRules;
     this.initClientEnv();
@@ -107,6 +115,12 @@ export class GeminiAgent {
       imageGenerationModel: this.imageGenerationModel,
       webSearchEngine: this.webSearchEngine,
     });
+
+    // 初始化 SkillManager
+    // Initialize SkillManager
+    if (this.skillsDir) {
+      this.skillManager = new SkillManager(this.skillsDir, this.enabledSkills || [], this.autoCreateSkills);
+    }
 
     // Register as current agent for flashFallbackHandler access
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -543,6 +557,102 @@ export class GeminiAgent {
     }
   }
 
+  /**
+   * 检查并创建所需的技能
+   * Check and create required skills
+   */
+  private async checkAndCreateSkills(message: string, msg_id: string): Promise<void> {
+    try {
+      // 分析是否需要新技能
+      // Analyze if new skill is needed
+      const requirement = await this.skillManager!.analyzeSkillRequirement(message);
+
+      if (requirement.needed && requirement.requirement) {
+        // 通知用户正在创建技能
+        // Notify user that skill is being created
+        this.onStreamEvent({
+          type: 'skill-creating',
+          data: {
+            message: `🔧 Detecting need for new skill: ${requirement.reason}`,
+            requirement: requirement.requirement,
+          },
+          msg_id,
+        });
+
+        // 创建技能
+        // Create skill
+        const result = await this.skillManager!.createSkill(requirement.requirement);
+
+        if (result.status === 'success' && result.skill_name) {
+          // 加载新技能
+          // Load new skill
+          await this.skillManager!.loadSkill(result.skill_name);
+
+          // 重新加载技能内容到 System Prompt
+          // Reload skills content to System Prompt
+          await this.reloadSkills();
+
+          // 通知用户技能已创建
+          // Notify user that skill is created
+          this.onStreamEvent({
+            type: 'skill-created',
+            data: {
+              skill_name: result.skill_name,
+              message: `✅ Created new skill: ${result.skill_name}`,
+              usage: result.usage,
+              category: result.category,
+            },
+            msg_id,
+          });
+        } else {
+          // 创建失败，记录错误但继续执行
+          // Creation failed, log error but continue
+          console.error('[GeminiAgent] Skill creation failed:', result.error);
+          this.onStreamEvent({
+            type: 'skill-creation-failed',
+            data: {
+              error: result.error,
+              message: '⚠️ Failed to create skill, continuing with existing capabilities',
+            },
+            msg_id,
+          });
+        }
+      }
+    } catch (error) {
+      // 捕获错误但不中断主流程
+      // Catch error but don't interrupt main flow
+      console.error('[GeminiAgent] Error in skill creation:', error);
+    }
+  }
+
+  /**
+   * 重新加载技能
+   * Reload skills
+   */
+  private reloadSkills(): Promise<void> {
+    if (!this.skillManager || !this.config) return Promise.resolve();
+
+    try {
+      // 获取更新后的技能列表
+      // Get updated skills list
+      const enabledSkills = this.skillManager.getEnabledSkills();
+
+      // 重新加载技能内容
+      // Reload skills content
+      // 技能内容会在下次 prompt 构建时自动包含
+      // Skills content will be automatically included in next prompt build
+      console.log('[GeminiAgent] Skills reloaded:', enabledSkills);
+
+      // 更新 enabledSkills 列表
+      // Update enabledSkills list
+      this.enabledSkills = enabledSkills;
+      return Promise.resolve();
+    } catch (error) {
+      console.error('[GeminiAgent] Error reloading skills:', error);
+      return Promise.reject(error);
+    }
+  }
+
   async send(message: string | Array<{ text: string }>, msg_id = '', files?: string[]) {
     await this.bootstrap;
     const abortController = this.createAbortController();
@@ -574,6 +684,13 @@ export class GeminiAgent {
         console.warn('[GeminiAgent] OAuth token check error:', tokenError);
         // 继续执行，让后续流程处理认证错误
       }
+    }
+
+    // 检查是否需要创建新技能
+    // Check if new skill is needed
+    if (this.skillManager && this.skillManager.isAutoCreateEnabled()) {
+      const messageText = Array.isArray(message) ? message[0]?.text || '' : message;
+      await this.checkAndCreateSkills(messageText, msg_id);
     }
 
     // Prepend one-time history prefix before processing commands

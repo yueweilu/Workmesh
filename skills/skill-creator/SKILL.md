@@ -1,12 +1,97 @@
 ---
 name: skill-creator
-description: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations.
+description: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations. Also supports AUTOMATIC skill creation - when a user needs functionality that doesn't exist in current skills, this skill can automatically generate a new skill to fulfill that need.
 license: Complete terms in LICENSE.txt
 ---
 
 # Skill Creator
 
-This skill provides guidance for creating effective skills.
+This skill provides guidance for creating effective skills and supports **automatic skill generation** based on user requirements.
+
+## 🚀 Quick Start: Automatic Skill Creation
+
+**NEW**: This skill can now automatically create new skills when needed!
+
+### When to Use Auto-Creation
+
+Use automatic skill creation when:
+
+- A user requests functionality that doesn't exist in current skills
+- You need a quick prototype skill for a specific task
+- The task follows a common pattern (CSV analysis, image processing, API calls, etc.)
+
+### Auto-Create Command
+
+```bash
+python skills/skill-creator/scripts/auto_create_skill.py "<requirement description>" [skills_dir]
+```
+
+**Examples:**
+
+```bash
+# Create a CSV analyzer skill
+python skills/skill-creator/scripts/auto_create_skill.py "Analyze CSV file data distribution"
+
+# Create an image processor skill
+python skills/skill-creator/scripts/auto_create_skill.py "Convert images to grayscale"
+
+# Create an API caller skill
+python skills/skill-creator/scripts/auto_create_skill.py "Make HTTP API requests"
+
+# Specify custom skills directory
+python skills/skill-creator/scripts/auto_create_skill.py "Parse JSON data" /path/to/skills
+```
+
+### What Gets Auto-Generated
+
+The auto-creator will:
+
+1. ✅ Analyze the requirement and determine skill type
+2. ✅ Generate a complete SKILL.md with proper frontmatter
+3. ✅ Create a working Python script with error handling
+4. ✅ Install required dependencies automatically
+5. ✅ Return JSON with skill details and usage instructions
+
+### Supported Auto-Generation Types
+
+| Type                 | Keywords                               | Generated Script      |
+| -------------------- | -------------------------------------- | --------------------- |
+| **CSV Analysis**     | csv, excel, spreadsheet, data analysis | pandas-based analyzer |
+| **Image Processing** | image, picture, photo, png, jpg        | PIL/Pillow processor  |
+| **API Calling**      | api, http, rest, request, fetch        | requests-based client |
+| **JSON Processing**  | json, parse, format                    | JSON parser/formatter |
+| **Text Processing**  | text, string, parse text               | Text processor        |
+| **Web Scraping**     | web, scrape, crawl, html               | BeautifulSoup scraper |
+| **Generic**          | (any other)                            | Customizable template |
+
+### Output Format
+
+The auto-creator returns JSON:
+
+```json
+{
+  "status": "success",
+  "skill_name": "csv_analyzer",
+  "skill_path": "/path/to/skills/csv_analyzer",
+  "script_path": "/path/to/skills/csv_analyzer/csv_analyzer.py",
+  "usage": "python /path/to/skills/csv_analyzer/csv_analyzer.py <args>",
+  "category": "data_analysis",
+  "dependencies": ["pandas"]
+}
+```
+
+### Workflow Integration
+
+**Automatic Detection Pattern:**
+
+1. User makes a request: "Help me analyze this CSV file"
+2. AI checks if a suitable skill exists
+3. If not found, AI calls auto_create_skill.py
+4. New skill is created and immediately available
+5. AI uses the new skill to complete the task
+6. AI informs user: "I created a new skill to help with this!"
+
+---
 
 ## About Skills
 
