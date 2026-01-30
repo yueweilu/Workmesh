@@ -98,7 +98,7 @@ const AssistantManagement: React.FC<AssistantManagementProps> = ({ message }) =>
 
       // Use readFile invoke. If it fails with ENOENT, it means config doesn't exist, which is fine.
       // The bridge might throw, so we catch it.
-      const content = await ipcBridge.fs.readFile.invoke({ path: configPath }).catch((err) => {
+      const content = await ipcBridge.fs.readFile.invoke({ path: configPath }).catch((err): string | null => {
         // Check if error is "file not found"
         // The error object from IPC might be a string or object
         const errStr = String(err);
