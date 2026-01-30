@@ -63,7 +63,6 @@ export const fs = {
   readFileBuffer: bridge.buildProvider<ArrayBuffer, { path: string }>('read-file-buffer'), // 读取二进制文件为 ArrayBuffer
   createTempFile: bridge.buildProvider<string, { fileName: string }>('create-temp-file'), // 创建临时文件
   writeFile: bridge.buildProvider<boolean, { path: string; data: Uint8Array | string }>('write-file'), // 写入文件
-  ensureDir: bridge.buildProvider<boolean, { path: string }>('ensure-dir'), // 确保目录存在
   ensureDir: bridge.buildProvider<boolean, { path: string }>('ensure-dir'), // 确保目录存在（递归创建）
   getFileMetadata: bridge.buildProvider<IFileMetadata, { path: string }>('get-file-metadata'), // 获取文件元数据
   copyFilesToWorkspace: bridge.buildProvider<

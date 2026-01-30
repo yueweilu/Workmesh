@@ -1,6 +1,6 @@
 {
-  "name": "AionUi",
-  "productName": "AionUi",
+  "name": "Workmesh",
+  "productName": "Workmesh",
   "version": "1.7.2",
   "description": "Transform your command-line AI agent into a modern, efficient AI Chat interface.",
   "main": ".webpack/main",

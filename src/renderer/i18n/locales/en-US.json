@@ -51,8 +51,8 @@
     "remove": "Remove"
   },
   "login": {
-    "pageTitle": "AionUi - Sign In",
-    "brand": "AionUi",
+    "pageTitle": "Workmesh - Sign In",
+    "brand": "Workmesh",
     "subtitle": "Welcome back, please sign in to your account",
     "username": "Username",
     "usernamePlaceholder": "Enter your username",
@@ -199,7 +199,7 @@
       "clearWorkspace": "Remove folder",
       "openFolder": "Open Folder",
       "none": "None",
-      "quickActionsTitle": "What can AionUi do?",
+      "quickActionsTitle": "What can Workmesh do?",
       "quickActionFeedback": "Got feedback or suggestions?",
       "quickActionStar": "Like us? Give us a star!"
     },
