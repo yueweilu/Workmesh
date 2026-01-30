@@ -520,7 +520,7 @@ const getBuiltinAssistants = (): AcpBackendConfig[] => {
 
   for (const preset of ASSISTANT_PRESETS) {
     // Cowork 默认启用的技能列表 / Default enabled skills for Cowork
-    const defaultEnabledSkills = preset.id === 'cowork' ? ['skill-creator', 'pptx', 'docx', 'pdf', 'xlsx'] : preset.id === 'weather-lookup' ? ['weather-lookup'] : undefined;
+    const defaultEnabledSkills = preset.id === 'cowork' ? ['skill-creator', 'pptx', 'docx', 'pdf', 'xlsx'] : preset.id === 'weather-lookup' ? ['weather-lookup'] : preset.id === 'wechat-publisher' ? ['wechat-publisher'] : undefined;
 
     assistants.push({
       id: `builtin-${preset.id}`,

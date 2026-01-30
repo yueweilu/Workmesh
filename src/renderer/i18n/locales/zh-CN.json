@@ -618,7 +618,15 @@
     "allSkillsExist": "所有找到的技能都已存在",
     "noSkillsFound": "在选择的路径中未找到有效的技能",
     "skillScanFailed": "扫描技能失败",
-    "quickScan": "快速扫描常用路径"
+    "quickScan": "快速扫描常用路径",
+    "enableWechatAssistant": "启用微信助手",
+    "saveAndEnable": "保存并启用",
+    "wechatConfigDescription": "请提供您的微信公众号凭证以启用此助手。",
+    "wechatConfigTitle": "微信配置",
+    "wechatAppId": "AppID",
+    "wechatAppSecret": "AppSecret",
+    "wechatAppIdPlaceholder": "输入微信 AppID",
+    "wechatAppSecretPlaceholder": "输入微信 AppSecret"
   },
   "messages": {
     "fileChanges": "文件变更",

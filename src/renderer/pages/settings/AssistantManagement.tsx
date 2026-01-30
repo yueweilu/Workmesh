@@ -701,15 +701,15 @@ const AssistantManagement: React.FC<AssistantManagementProps> = ({ message }) =>
             {/* WeChat Publisher Config Section */}
             {activeAssistant?.id === 'builtin-wechat-publisher' && (
               <div className='flex-shrink-0'>
-                <Typography.Text bold>WeChat Configuration</Typography.Text>
+                <Typography.Text bold>{t('settings.wechatConfigTitle', { defaultValue: 'WeChat Configuration' })}</Typography.Text>
                 <div className='mt-10px p-12px bg-fill-3 rounded-lg space-y-12px'>
                   <div>
-                    <div className='mb-4px text-12px text-t-secondary'>AppID</div>
-                    <Input value={wechatAppId} onChange={setWechatAppId} placeholder='Enter WeChat AppID' className='rounded-4px bg-bg-1' />
+                    <div className='mb-4px text-12px text-t-secondary'>{t('settings.wechatAppId', { defaultValue: 'AppID' })}</div>
+                    <Input value={wechatAppId} onChange={setWechatAppId} placeholder={t('settings.wechatAppIdPlaceholder', { defaultValue: 'Enter WeChat AppID' })} className='rounded-4px bg-bg-1' />
                   </div>
                   <div>
-                    <div className='mb-4px text-12px text-t-secondary'>AppSecret</div>
-                    <Input.Password value={wechatAppSecret} onChange={setWechatAppSecret} placeholder='Enter WeChat AppSecret' className='rounded-4px bg-bg-1' />
+                    <div className='mb-4px text-12px text-t-secondary'>{t('settings.wechatAppSecret', { defaultValue: 'AppSecret' })}</div>
+                    <Input.Password value={wechatAppSecret} onChange={setWechatAppSecret} placeholder={t('settings.wechatAppSecretPlaceholder', { defaultValue: 'Enter WeChat AppSecret' })} className='rounded-4px bg-bg-1' />
                   </div>
                 </div>
               </div>
@@ -1100,21 +1100,21 @@ const AssistantManagement: React.FC<AssistantManagementProps> = ({ message }) =>
           setPendingWechatToggle(null);
         }}
         onOk={handleWechatConfigConfirm}
-        title='Enable WeChat Assistant'
-        okText='Save & Enable'
-        cancelText='Cancel'
+        title={pendingWechatToggle?.assistant?.nameI18n?.[localeKey] || pendingWechatToggle?.assistant?.name || t('settings.enableWechatAssistant', { defaultValue: 'Enable WeChat Assistant' })}
+        okText={t('settings.saveAndEnable', { defaultValue: 'Save & Enable' })}
+        cancelText={t('common.cancel', { defaultValue: 'Cancel' })}
         style={{ width: 400 }}
         wrapStyle={{ zIndex: 10000 }}
       >
         <div className='space-y-16px'>
-          <div className='text-13px text-t-secondary mb-12px'>Please provide your WeChat Official Account credentials to enable this assistant.</div>
+          <div className='text-13px text-t-secondary mb-12px'>{t('settings.wechatConfigDescription', { defaultValue: 'Please provide your WeChat Official Account credentials to enable this assistant.' })}</div>
           <div>
-            <Typography.Text bold>AppID</Typography.Text>
-            <Input className='mt-8px' placeholder='wx...' value={wechatAppId} onChange={setWechatAppId} />
+            <Typography.Text bold>{t('settings.wechatAppId', { defaultValue: 'AppID' })}</Typography.Text>
+            <Input className='mt-8px' placeholder={t('settings.wechatAppIdPlaceholder', { defaultValue: 'wx...' })} value={wechatAppId} onChange={setWechatAppId} />
           </div>
           <div>
-            <Typography.Text bold>AppSecret</Typography.Text>
-            <Input.Password className='mt-8px' placeholder='Enter AppSecret' value={wechatAppSecret} onChange={setWechatAppSecret} />
+            <Typography.Text bold>{t('settings.wechatAppSecret', { defaultValue: 'AppSecret' })}</Typography.Text>
+            <Input.Password className='mt-8px' placeholder={t('settings.wechatAppSecretPlaceholder', { defaultValue: 'Enter AppSecret' })} value={wechatAppSecret} onChange={setWechatAppSecret} />
           </div>
         </div>
       </Modal>

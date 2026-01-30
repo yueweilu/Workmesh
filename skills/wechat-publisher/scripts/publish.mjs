@@ -98,9 +98,31 @@ async function main() {
     };
 
     // 3. Execute CLI Command to Create Draft
-    // Pointing to the installation in D:\MAX_Workspace
-    const cliPath = 'D:\\MAX_Workspace\\node_modules\\@lanyijianke\\wechat-official-account-mcp\\build\\index.js';
-    
+    // Try to resolve the package from the project root node_modules
+    const projectRoot = path.resolve(__dirname, '../../..');
+    const possibleCliPaths = [
+        path.join(projectRoot, 'node_modules', '@lanyijianke', 'wechat-official-account-mcp', 'build', 'index.js'),
+        // Fallback for development environments or if installed globally/elsewhere
+        path.resolve(__dirname, '../../../node_modules/@lanyijianke/wechat-official-account-mcp/build/index.js') 
+    ];
+
+    let cliPath = possibleCliPaths.find(p => fs.existsSync(p));
+
+    if (!cliPath) {
+         // Fallback: try to resolve via require logic (though we are in ESM)
+         try {
+             // This assumes the package is installed in the same node_modules tree
+             const pkgPath = path.dirname(new URL(import.meta.resolve('@lanyijianke/wechat-official-account-mcp/package.json')).pathname).replace(/^\/([a-zA-Z]:)/, '$1');
+             cliPath = path.join(pkgPath, 'build', 'index.js');
+         } catch (e) {
+             console.warn("Could not resolve via import.meta.resolve");
+         }
+    }
+
+    if (!cliPath || !fs.existsSync(cliPath)) {
+        throw new Error(`Could not find wechat-official-account-mcp CLI. Checked: ${possibleCliPaths.join(', ')}`);
+    }
+
     // Get arguments passed to this script (skipping node and script path)
     const args = process.argv.slice(2);
     

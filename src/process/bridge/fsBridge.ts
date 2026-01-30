@@ -428,6 +428,17 @@ export function initFsBridge(): void {
     }
   });
 
+  // 确保目录存在（递归创建）
+  ipcBridge.fs.ensureDir.provider(async ({ path: dirPath }) => {
+    try {
+      await fs.mkdir(dirPath, { recursive: true });
+      return true;
+    } catch (error) {
+      console.error('Failed to ensure directory:', error);
+      return false;
+    }
+  });
+
   // 获取文件元数据
   ipcBridge.fs.getFileMetadata.provider(async ({ path: filePath }) => {
     try {

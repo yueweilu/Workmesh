@@ -621,7 +621,15 @@
     "allSkillsExist": "All found skills already exist",
     "noSkillsFound": "No valid skills found in the selected path(s)",
     "skillScanFailed": "Failed to scan skills",
-    "quickScan": "Quick Scan Common Paths"
+    "quickScan": "Quick Scan Common Paths",
+    "enableWechatAssistant": "Enable WeChat Assistant",
+    "saveAndEnable": "Save & Enable",
+    "wechatConfigDescription": "Please provide your WeChat Official Account credentials to enable this assistant.",
+    "wechatConfigTitle": "WeChat Configuration",
+    "wechatAppId": "AppID",
+    "wechatAppSecret": "AppSecret",
+    "wechatAppIdPlaceholder": "Enter WeChat AppID",
+    "wechatAppSecretPlaceholder": "Enter WeChat AppSecret"
   },
   "messages": {
     "fileChanges": "File Changes",

@@ -161,4 +161,22 @@ export const ASSISTANT_PRESETS: AssistantPreset[] = [
       'zh-CN': '使用天气查询技能获取全球城市的实时天气预报。',
     },
   },
+  {
+    id: 'wechat-publisher',
+    avatar: '💬',
+    presetAgentType: 'gemini',
+    resourceDir: 'assistant/wechat-publisher',
+    ruleFiles: {
+      'en-US': 'wechat-publisher.md',
+      'zh-CN': 'wechat-publisher.zh-CN.md',
+    },
+    nameI18n: {
+      'en-US': 'WeChat Publisher',
+      'zh-CN': '微信公众号助手',
+    },
+    descriptionI18n: {
+      'en-US': 'Your assistant for publishing Markdown articles to WeChat Official Accounts. Supports drafts and auto-publish.',
+      'zh-CN': '你的微信公众号发布助手。支持发布 Markdown 文章为草稿或直接群发。',
+    },
+  },
 ];
