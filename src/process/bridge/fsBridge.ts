@@ -5,14 +5,14 @@
  */
 
 import { AIONUI_TIMESTAMP_SEPARATOR } from '@/common/constants';
-import fs from 'fs/promises';
-import path from 'path';
-import os from 'os';
-import https from 'node:https';
-import http from 'node:http';
 import { app } from 'electron';
+import fs from 'fs/promises';
+import http from 'node:http';
+import https from 'node:https';
+import os from 'os';
+import path from 'path';
 import { ipcBridge } from '../../common';
-import { getSystemDir, getAssistantsDir } from '../initStorage';
+import { getAssistantsDir, getSystemDir } from '../initStorage';
 import { readDirectoryRecursive } from '../utils';
 
 // ============================================================================
@@ -413,6 +413,17 @@ export function initFsBridge(): void {
       return true;
     } catch (error) {
       console.error('Failed to write file:', error);
+      return false;
+    }
+  });
+
+  // 确保目录存在（递归创建）
+  ipcBridge.fs.ensureDir.provider(async ({ path: dirPath }) => {
+    try {
+      await fs.mkdir(dirPath, { recursive: true });
+      return true;
+    } catch (error) {
+      console.error('Failed to ensure directory:', error);
       return false;
     }
   });

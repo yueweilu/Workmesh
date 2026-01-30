@@ -1,16 +1,16 @@
-import type { Message } from '@arco-design/web-react';
-import { Avatar, Button, Checkbox, Collapse, Input, Drawer, Modal, Typography, Select, Switch } from '@arco-design/web-react';
-import { Close, Plus, Robot, SettingOne, FolderOpen, Delete } from '@icon-park/react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { mutate } from 'swr';
 import { ipcBridge } from '@/common';
 import { ConfigStorage } from '@/common/storage';
 import { resolveLocaleKey } from '@/common/utils';
-import type { AcpBackendConfig, PresetAgentType } from '@/types/acpTypes';
-import MarkdownView from '@/renderer/components/Markdown';
-import EmojiPicker from '@/renderer/components/EmojiPicker';
 import coworkSvg from '@/renderer/assets/cowork.svg';
+import EmojiPicker from '@/renderer/components/EmojiPicker';
+import MarkdownView from '@/renderer/components/Markdown';
+import type { AcpBackendConfig, PresetAgentType } from '@/types/acpTypes';
+import type { Message } from '@arco-design/web-react';
+import { Avatar, Button, Checkbox, Collapse, Drawer, Input, Modal, Select, Switch, Typography } from '@arco-design/web-react';
+import { Close, Delete, FolderOpen, Plus, Robot, SettingOne } from '@icon-park/react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { mutate } from 'swr';
 
 // Skill 信息类型 / Skill info type
 interface SkillInfo {
@@ -56,10 +56,96 @@ const AssistantManagement: React.FC<AssistantManagementProps> = ({ message }) =>
   const [deletePendingSkillName, setDeletePendingSkillName] = useState<string | null>(null); // 待删除的 pending skill 名称 / Pending skill name to delete
   const [deleteCustomSkillName, setDeleteCustomSkillName] = useState<string | null>(null); // 待从助手移除的 custom skill 名称 / Custom skill to remove from assistant
   const textareaWrapperRef = useRef<HTMLDivElement>(null);
+
+  // WeChat Publisher Config State
+  const [wechatModalVisible, setWechatModalVisible] = useState(false);
+  const [wechatAppId, setWechatAppId] = useState('');
+  const [wechatAppSecret, setWechatAppSecret] = useState('');
+  const [pendingWechatToggle, setPendingWechatToggle] = useState<{ assistant: AcpBackendConfig; enabled: boolean } | null>(null);
+
   const localeKey = resolveLocaleKey(i18n.language);
   const avatarImageMap: Record<string, string> = {
     'cowork.svg': coworkSvg,
     '🛠️': coworkSvg,
+  };
+
+  // Helper to find wechat-publisher skill location
+  const getWechatSkillLocation = async (): Promise<string | null> => {
+    try {
+      const skills = await ipcBridge.fs.listAvailableSkills.invoke();
+      const skill = skills.find((s) => s.name === 'wechat-publisher');
+      return skill ? skill.location : null;
+    } catch (e) {
+      console.error('Failed to list skills:', e);
+      return null;
+    }
+  };
+
+  // Helper to load wechat config
+  const loadWechatConfig = async () => {
+    const location = await getWechatSkillLocation();
+
+    if (!location) return null;
+
+    try {
+      const separator = location.includes('\\') ? '\\' : '/';
+      let dirPath = location;
+      if (dirPath.toLowerCase().endsWith('.md')) {
+        dirPath = dirPath.substring(0, dirPath.lastIndexOf(separator));
+      }
+
+      const configPath = `${dirPath}${separator}assets${separator}wechat_config.json`;
+
+      // Use readFile invoke. If it fails with ENOENT, it means config doesn't exist, which is fine.
+      // The bridge might throw, so we catch it.
+      const content = await ipcBridge.fs.readFile.invoke({ path: configPath }).catch((err) => {
+        // Check if error is "file not found"
+        // The error object from IPC might be a string or object
+        const errStr = String(err);
+        if (errStr.includes('ENOENT') || errStr.includes('no such file')) {
+          return null; // Return null to indicate no config
+        }
+        throw err; // Re-throw real errors
+      });
+
+      if (content) {
+        return JSON.parse(content);
+      }
+    } catch (e) {
+      // If parsing fails or other IO error (except ENOENT which is handled above), log it
+      if (!String(e).includes('ENOENT')) {
+        console.warn('Failed to load wechat config:', e);
+      }
+    }
+    return null;
+  };
+
+  const saveWechatConfig = async (appId: string, secret: string) => {
+    const location = await getWechatSkillLocation();
+    if (!location) throw new Error('WeChat Publisher skill not found');
+
+    const separator = location.includes('\\') ? '\\' : '/';
+    let dirPath = location;
+    if (dirPath.toLowerCase().endsWith('.md')) {
+      dirPath = dirPath.substring(0, dirPath.lastIndexOf(separator));
+    }
+
+    const assetsDir = `${dirPath}${separator}assets`;
+    const configPath = `${assetsDir}${separator}wechat_config.json`;
+
+    // 确保 assets 目录存在
+    await ipcBridge.fs.ensureDir.invoke({ path: assetsDir });
+
+    // 保存配置
+    const config = {
+      appId,
+      appSecret: secret,
+    };
+
+    await ipcBridge.fs.writeFile.invoke({
+      path: configPath,
+      data: JSON.stringify(config, null, 2),
+    });
   };
 
   // Auto focus textarea when drawer opens
@@ -186,6 +272,18 @@ const AssistantManagement: React.FC<AssistantManagementProps> = ({ message }) =>
     setEditAgent(assistant.presetAgentType || 'gemini');
     setEditVisible(true);
 
+    // Check for WeChat Publisher specific config
+    if (assistant.id === 'builtin-wechat-publisher') {
+      const config = await loadWechatConfig();
+      if (config) {
+        setWechatAppId(config.appId || '');
+        setWechatAppSecret(config.appSecret || '');
+      } else {
+        setWechatAppId('');
+        setWechatAppSecret('');
+      }
+    }
+
     // 先加载规则、技能内容 / Load rules, skills content
     try {
       const [context, skills] = await Promise.all([loadAssistantContext(assistant.id), loadAssistantSkills(assistant.id)]);
@@ -245,6 +343,19 @@ const AssistantManagement: React.FC<AssistantManagementProps> = ({ message }) =>
       if (!editName.trim()) {
         message.error(t('settings.assistantNameRequired', { defaultValue: 'Assistant name is required' }));
         return;
+      }
+
+      // Special handling for WeChat Publisher config save in Edit Drawer
+      if (activeAssistant?.id === 'builtin-wechat-publisher') {
+        if (wechatAppId && wechatAppSecret) {
+          try {
+            await saveWechatConfig(wechatAppId, wechatAppSecret);
+          } catch (e) {
+            console.error('Failed to save wechat config', e);
+            message.error('Failed to save WeChat config: ' + e.message);
+            return;
+          }
+        }
       }
 
       // 先导入所有待导入的 skills（跳过已存在的）/ Import pending skills (skip existing ones)
@@ -380,6 +491,19 @@ const AssistantManagement: React.FC<AssistantManagementProps> = ({ message }) =>
 
   // Toggle assistant enabled state / 切换助手启用状态
   const handleToggleEnabled = async (assistant: AcpBackendConfig, enabled: boolean) => {
+    // Intercept for WeChat Publisher
+    if (enabled && assistant.id === 'builtin-wechat-publisher') {
+      const config = await loadWechatConfig();
+      // If config is missing or incomplete, show modal
+      if (!config || !config.appId || !config.appSecret) {
+        setPendingWechatToggle({ assistant, enabled });
+        setWechatAppId(config?.appId || '');
+        setWechatAppSecret(config?.appSecret || '');
+        setWechatModalVisible(true);
+        return;
+      }
+    }
+
     try {
       const agents = (await ConfigStorage.get('acp.customAgents')) || [];
       const updatedAgents = agents.map((agent) => (agent.id === assistant.id ? { ...agent, enabled } : agent));
@@ -389,6 +513,28 @@ const AssistantManagement: React.FC<AssistantManagementProps> = ({ message }) =>
     } catch (error) {
       console.error('Failed to toggle assistant:', error);
       message.error(t('common.failed', { defaultValue: 'Failed' }));
+    }
+  };
+
+  const handleWechatConfigConfirm = async () => {
+    if (!wechatAppId || !wechatAppSecret) {
+      message.error('AppID and AppSecret are required');
+      return;
+    }
+
+    try {
+      await saveWechatConfig(wechatAppId, wechatAppSecret);
+      setWechatModalVisible(false);
+
+      // If there was a pending toggle, execute it now
+      if (pendingWechatToggle) {
+        await handleToggleEnabled(pendingWechatToggle.assistant, pendingWechatToggle.enabled);
+        setPendingWechatToggle(null);
+      }
+      message.success('WeChat configuration saved');
+    } catch (e) {
+      console.error('Failed to save wechat config:', e);
+      message.error('Failed to save config: ' + e.message);
     }
   };
 
@@ -551,6 +697,24 @@ const AssistantManagement: React.FC<AssistantManagementProps> = ({ message }) =>
                 <Select.Option value='codex'>Codex</Select.Option>
               </Select>
             </div>
+
+            {/* WeChat Publisher Config Section */}
+            {activeAssistant?.id === 'builtin-wechat-publisher' && (
+              <div className='flex-shrink-0'>
+                <Typography.Text bold>WeChat Configuration</Typography.Text>
+                <div className='mt-10px p-12px bg-fill-3 rounded-lg space-y-12px'>
+                  <div>
+                    <div className='mb-4px text-12px text-t-secondary'>AppID</div>
+                    <Input value={wechatAppId} onChange={setWechatAppId} placeholder='Enter WeChat AppID' className='rounded-4px bg-bg-1' />
+                  </div>
+                  <div>
+                    <div className='mb-4px text-12px text-t-secondary'>AppSecret</div>
+                    <Input.Password value={wechatAppSecret} onChange={setWechatAppSecret} placeholder='Enter WeChat AppSecret' className='rounded-4px bg-bg-1' />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className='flex-shrink-0'>
               <Typography.Text bold className='flex-shrink-0'>
                 {t('settings.assistantRules', { defaultValue: 'Rules' })}
@@ -925,6 +1089,33 @@ const AssistantManagement: React.FC<AssistantManagementProps> = ({ message }) =>
           {t('settings.removeCustomSkillNote', {
             defaultValue: 'This will only remove the skill from this assistant. The skill will remain in Builtin Skills and can be re-added later.',
           })}
+        </div>
+      </Modal>
+
+      {/* WeChat Config Modal */}
+      <Modal
+        visible={wechatModalVisible}
+        onCancel={() => {
+          setWechatModalVisible(false);
+          setPendingWechatToggle(null);
+        }}
+        onOk={handleWechatConfigConfirm}
+        title='Enable WeChat Assistant'
+        okText='Save & Enable'
+        cancelText='Cancel'
+        style={{ width: 400 }}
+        wrapStyle={{ zIndex: 10000 }}
+      >
+        <div className='space-y-16px'>
+          <div className='text-13px text-t-secondary mb-12px'>Please provide your WeChat Official Account credentials to enable this assistant.</div>
+          <div>
+            <Typography.Text bold>AppID</Typography.Text>
+            <Input className='mt-8px' placeholder='wx...' value={wechatAppId} onChange={setWechatAppId} />
+          </div>
+          <div>
+            <Typography.Text bold>AppSecret</Typography.Text>
+            <Input.Password className='mt-8px' placeholder='Enter AppSecret' value={wechatAppSecret} onChange={setWechatAppSecret} />
+          </div>
         </div>
       </Modal>
     </div>
