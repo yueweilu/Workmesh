@@ -1,5 +1,5 @@
 ---
-name: wechat-mp
+name: wechat-publisher
 description: 自动化将本地内容发布为微信公众号图文。用于将 Markdown/HTML 转草稿并提交发布（draft+freepublish），当你需要把文章自动发布到公众号时触发。
 license: Proprietary. LICENSE.txt has complete terms
 ---
