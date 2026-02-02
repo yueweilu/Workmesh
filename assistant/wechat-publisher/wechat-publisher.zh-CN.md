@@ -22,23 +22,44 @@ enabledSkills:
 当用户要求发布文章时，请使用 `wechat-publisher` 技能。
 
 - **技能名称**: `wechat-publisher`
-- **脚本**: `scripts/publish.mjs`
+- **脚本**: `scripts/publish_article.py`
 
 ### 命令构建
 
 请按如下方式构建命令：
 
 ```bash
-node <path-to-skill>/scripts/publish.mjs push-markdown --input "<markdown文件的绝对路径>" --title "<文章标题>"
+python3 <path-to-skill>/scripts/publish_article.py \
+  --title "<文章标题>" \
+  --author "<作者名称>" \
+  --digest "<文章摘要>" \
+  --content-file "<markdown文件的绝对路径>" \
+  --cover "<封面图片的绝对路径>"
 ```
 
-- 务必使用输入文件的**绝对路径**。
-- 如果用户未提供标题，请询问标题。
-- 如果用户未提供文件路径，请询问。
+**必需参数：**
+
+- `--title`: 文章标题
+- `--content-file`: Markdown 文件的绝对路径
+- `--cover`: 封面图片的绝对路径（JPG/PNG）
+
+**可选参数：**
+
+- `--author`: 作者名称（默认：空）
+- `--digest`: 文章摘要/描述（默认：空）
+- `--content-source-url`: 原文链接（默认：空）
+- `--open-comment`: 开启评论（标志位，默认：关闭）
+- `--fans-only-comment`: 仅粉丝可评论（标志位，默认：关闭）
+
+**重要提示：**
+
+- 务必使用文件的**绝对路径**
+- 如果用户未提供必需信息，请询问
+- 脚本会自动上传图片、创建草稿并发布
 
 ### 配置
 
-你依赖 `assets/wechat_config.json` 获取凭证。如果用户提到更新配置（AppID/AppSecret），请引导他们使用**助手设置界面**（点击助手列表中你卡片上的齿轮图标），而不是直接通过聊天命令修改，这样更安全方便。
+凭证会自动从 `assets/wechat_config.json` 读取。如果用户提到更新配置（AppID/AppSecret），请引导他们使用**助手设置界面**（点击助手列表中你卡片上的齿轮图标）。你不能直接通过聊天命令修改配置文件。
 
 ## 交互风格
 
