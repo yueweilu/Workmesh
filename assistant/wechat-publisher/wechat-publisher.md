@@ -44,6 +44,16 @@ When the user asks to publish an article, use the `wechat-publisher` skill.
 
 ### Command Construction
 
+**IMPORTANT**: Always check dependencies before executing scripts.
+
+#### Step 1: Check and Install Dependencies
+
+```bash
+python3 -c "import requests, markdown" 2>/dev/null || pip3 install requests markdown
+```
+
+#### Step 2: Execute Script
+
 Construct the command as follows:
 
 ```bash
@@ -54,6 +64,8 @@ python3 <path-to-skill>/scripts/publish_article.py \
   --content-file "<absolute-path-to-markdown>" \
   --cover "<absolute-path-to-cover-image>"
 ```
+
+**Error Handling**: If you encounter `ModuleNotFoundError`, install dependencies with `pip3 install requests markdown` and retry.
 
 **Required parameters:**
 

@@ -12,17 +12,55 @@ license: Proprietary. LICENSE.txt has complete terms
 - 通过官方草稿与发布接口：draft/add → freepublish/submit
 - 需要服务号并具备相关接口权限及有效 access_token
 
-## 依赖安装
+## 依赖管理
 
-在使用前，请确保安装 Python 依赖：
+**CRITICAL - Always Check Dependencies Before Execution**
+
+This skill requires Python packages: `requests` and `markdown`. Before executing any script, verify and install dependencies.
+
+### Automatic Dependency Check (Recommended)
+
+**Always run this check before executing Python scripts:**
 
 ```bash
-pip3 install -r requirements.txt
+# Quick check and auto-install if missing
+python3 -c "import requests, markdown" 2>/dev/null || pip3 install requests markdown
 ```
 
-或手动安装：
+### Virtual Environment Approach (Best Practice)
+
+For better isolation, use a virtual environment in the workspace:
 
 ```bash
+# Create and activate venv if it doesn't exist
+if [ ! -d ".venv" ]; then
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.txt
+else
+    source .venv/bin/activate
+fi
+
+# Then execute your script
+python3 scripts/publish_article.py --title "..." --content-file "..." --cover "..."
+```
+
+### Error Handling
+
+If you encounter `ModuleNotFoundError: No module named 'requests'` or `'markdown'`:
+
+1. **Immediate fix**: Run `pip3 install requests markdown`
+2. **Better approach**: Create virtual environment as shown above
+3. **Verify**: Run `python3 -c "import requests, markdown"` to confirm
+4. **Retry**: Execute the original command again
+
+### Manual Installation (if needed)
+
+```bash
+# Install from requirements.txt
+pip3 install -r requirements.txt
+
+# Or install individually
 pip3 install requests markdown
 ```
 
@@ -44,6 +82,15 @@ pip3 install requests markdown
 
 ## 快速开始
 
+### Step 1: Ensure Dependencies (REQUIRED)
+
+```bash
+# Check and install dependencies
+python3 -c "import requests, markdown" 2>/dev/null || pip3 install requests markdown
+```
+
+### Step 2: Publish Article
+
 发布单图文（news）：
 
 ```bash
@@ -54,6 +101,8 @@ python scripts/publish_article.py \
   --content-file ./article.md \
   --cover ./cover.jpg
 ```
+
+**Note**: Always check dependencies before running scripts to avoid errors.
 
 ## 草稿
 

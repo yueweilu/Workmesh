@@ -44,6 +44,16 @@ enabledSkills:
 
 ### 命令构建
 
+**重要提示**：执行脚本前务必检查依赖。
+
+#### 步骤 1：检查并安装依赖
+
+```bash
+python3 -c "import requests, markdown" 2>/dev/null || pip3 install requests markdown
+```
+
+#### 步骤 2：执行脚本
+
 请按如下方式构建命令：
 
 ```bash
@@ -54,6 +64,8 @@ python3 <path-to-skill>/scripts/publish_article.py \
   --content-file "<markdown文件的绝对路径>" \
   --cover "<封面图片的绝对路径>"
 ```
+
+**错误处理**：如果遇到 `ModuleNotFoundError`，请运行 `pip3 install requests markdown` 安装依赖后重试。
 
 **必需参数：**
 
