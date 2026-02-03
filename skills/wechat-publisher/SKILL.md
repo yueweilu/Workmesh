@@ -12,13 +12,39 @@ license: Proprietary. LICENSE.txt has complete terms
 - 通过官方草稿与发布接口：draft/add → freepublish/submit
 - 需要服务号并具备相关接口权限及有效 access_token
 
+## 依赖安装
+
+在使用前，请确保安装 Python 依赖：
+
+```bash
+pip3 install -r requirements.txt
+```
+
+或手动安装：
+
+```bash
+pip3 install requests markdown
+```
+
+## 配置说明
+
+凭证获取优先级（从高到低）：
+
+1. **配置文件**（推荐）：`assets/wechat_config.json`
+   - 通过助手设置界面配置（点击助手卡片上的齿轮图标）
+   - 格式：`{"appId": "YOUR_APP_ID", "appSecret": "YOUR_APP_SECRET"}`
+
+2. **环境变量**：
+   - `WECHAT_MP_APPID` + `WECHAT_MP_APPSECRET`（使用稳定凭证）
+   - 或 `WECHAT_MP_ACCESS_TOKEN`（直接使用 token）
+
+3. **IP 白名单**：
+   - 服务器出口 IP 需加入公众号平台"开发者中心"IP 白名单
+   - 否则会出现凭证或接口调用失败
+
 ## 快速开始
 
--
-- 环境变量：
-  - WECHAT_MP_ACCESS_TOKEN 或配置稳定凭证：
-  - WECHAT_MP_USE_STABLE_TOKEN=1、WECHAT_MP_APPID、WECHAT_MP_APPSECRET
-- 发布单图文（news）
+发布单图文（news）：
 
 ```bash
 python scripts/publish_article.py \
@@ -67,7 +93,22 @@ python scripts/list_drafts.py --offset 0 --count 10 --no-content 1
 - 自动上传封面为永久素材并生成 thumb_media_id
 - 自动解析并上传内容中的本地图片为有效 URL
 - 成功后返回发布任务信息（publish_id、msg_data_id）
-- 服务器出口 IP 需加入公众号平台“开发者中心”IP白名单，否则会出现凭证或接口调用失败
+- Markdown 内容会自动转换为 HTML 格式
+
+## 内容创作指南
+
+### 标题要求
+
+- **吸引力**：标题必须极具吸引力，能够激发读者的点击欲望，但避免过度标题党
+- **长度**：控制在 64 字节以内（约 32 个汉字）
+- **风格**：可以使用适量的 emoji，语气要符合公众号读者的阅读习惯
+
+### 内容要求
+
+- **结构清晰**：使用 Markdown 格式，包含引人入胜的导语、清晰的小标题、总结或引导互动的结语
+- **排版**：适当使用加粗强调重点，列表项使用无序或有序列表，段落之间保留空行
+- **语气**：专业但亲切，避免过于生硬的官方腔调
+- **长度**：内容详实，字数适中（通常 800-2000 字，视主题而定）
 
 ## 发布管理
 
