@@ -11,6 +11,8 @@ license: Proprietary. LICENSE.txt has complete terms
 - 支持将本地 Markdown/HTML 内容发布为公众号图文
 - 通过官方草稿与发布接口：draft/add → freepublish/submit
 - 需要服务号并具备相关接口权限及有效 access_token
+- **实现方式**：纯 Python 脚本（位于 `scripts/` 目录）
+- **不支持**：Node.js 或其他语言实现
 
 ## 依赖管理
 
