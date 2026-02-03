@@ -145,7 +145,8 @@ const useAcpMessage = (conversation_id: string) => {
           });
 
           // Force a new ID to ensure list update and scroll
-          const permissionMsg = { ...transformedMessage, id: uuid() };
+          // Also force new msg_id to ensure database inserts a new record instead of updating previous one
+          const permissionMsg = { ...transformedMessage, id: uuid(), msg_id: uuid() };
           addOrUpdateMessage(permissionMsg, true);
           break;
         }

@@ -177,7 +177,8 @@ const CodexSendBox: React.FC<{ conversation_id: string }> = ({ conversation_id }
           const transformedMessage = transformMessage(message);
           if (transformedMessage) {
             // Force a new ID to ensure list update
-            const permissionMsg = { ...transformedMessage, id: uuid() };
+            // Also force new msg_id to ensure database inserts a new record instead of updating previous one
+            const permissionMsg = { ...transformedMessage, id: uuid(), msg_id: uuid() };
             addOrUpdateMessage(permissionMsg, true);
           }
           break;
