@@ -8,6 +8,7 @@ import type { CodexToolCallUpdate, TMessage } from '@/common/chatLib';
 import { iconColors } from '@/renderer/theme/colors';
 import { Image } from '@arco-design/web-react';
 import { Down } from '@icon-park/react';
+import { emitter } from '@/renderer/utils/emitter';
 import MessageAcpPermission from '@renderer/messages/acp/MessageAcpPermission';
 import MessageAcpToolCall from '@renderer/messages/acp/MessageAcpToolCall';
 import MessageAgentStatus from '@renderer/messages/MessageAgentStatus';
@@ -153,6 +154,15 @@ const MessageList: React.FC<{ className?: string }> = () => {
       }, 100);
     }
   }, [list, atBottom, scrollToBottom]);
+
+  // Listen for manual scroll to bottom events
+  useEffect(() => {
+    const handler = () => scrollToBottom(true);
+    emitter.on('chat.scrollToBottom', handler);
+    return () => {
+      emitter.off('chat.scrollToBottom', handler);
+    };
+  }, [scrollToBottom]);
 
   // 点击滚动按钮
   const handleScrollButtonClick = () => {

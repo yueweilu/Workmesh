@@ -200,8 +200,27 @@ export const useAddOrUpdateMessage = () => {
 
   return (message: TMessage, add = false) => {
     pendingRef.current.push({ message, add });
-    if (rafRef.current === null) {
-      rafRef.current = requestAnimationFrame(flush);
+
+    // 识别需要"立即插队"的消息类型
+    const isUrgent =
+      add &&
+      (message.type === 'acp_permission' ||
+        message.type === 'codex_permission' ||
+        // 检查 tool_group 中是否有需要确认的工具
+        (message.type === 'tool_group' && Array.isArray(message.content) && message.content.some((t) => t.status === 'Confirming')));
+
+    if (isUrgent) {
+      // 如果有正在排队的渲染任务，先取消它，改为立即执行
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      flush();
+    } else {
+      // 普通消息继续排队，保证性能
+      if (rafRef.current === null) {
+        rafRef.current = requestAnimationFrame(flush);
+      }
     }
   };
 };

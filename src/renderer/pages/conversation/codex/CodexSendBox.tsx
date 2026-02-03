@@ -2,24 +2,24 @@ import { ipcBridge } from '@/common';
 import type { TMessage } from '@/common/chatLib';
 import { transformMessage } from '@/common/chatLib';
 import { uuid } from '@/common/utils';
-import SendBox from '@/renderer/components/sendbox';
-import { getSendBoxDraftHook, type FileOrFolderItem } from '@/renderer/hooks/useSendBoxDraft';
-import { useAddOrUpdateMessage } from '@/renderer/messages/hooks';
-import { allSupportedExts, type FileMetadata } from '@/renderer/services/FileService';
-import { emitter, useAddEventListener } from '@/renderer/utils/emitter';
-import { mergeFileSelectionItems } from '@/renderer/utils/fileSelection';
-import { Button, Tag } from '@arco-design/web-react';
-import { Plus } from '@icon-park/react';
-import { iconColors } from '@/renderer/theme/colors';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { buildDisplayMessage } from '@/renderer/utils/messageFiles';
-import ThoughtDisplay, { type ThoughtData } from '@/renderer/components/ThoughtDisplay';
 import FilePreview from '@/renderer/components/FilePreview';
 import HorizontalFileList from '@/renderer/components/HorizontalFileList';
-import { usePreviewContext } from '@/renderer/pages/conversation/preview';
-import { useLatestRef } from '@/renderer/hooks/useLatestRef';
+import SendBox from '@/renderer/components/sendbox';
+import ThoughtDisplay, { type ThoughtData } from '@/renderer/components/ThoughtDisplay';
 import { useAutoTitle } from '@/renderer/hooks/useAutoTitle';
+import { useLatestRef } from '@/renderer/hooks/useLatestRef';
+import { getSendBoxDraftHook, type FileOrFolderItem } from '@/renderer/hooks/useSendBoxDraft';
+import { useAddOrUpdateMessage } from '@/renderer/messages/hooks';
+import { usePreviewContext } from '@/renderer/pages/conversation/preview';
+import { allSupportedExts, type FileMetadata } from '@/renderer/services/FileService';
+import { iconColors } from '@/renderer/theme/colors';
+import { emitter, useAddEventListener } from '@/renderer/utils/emitter';
+import { mergeFileSelectionItems } from '@/renderer/utils/fileSelection';
+import { buildDisplayMessage } from '@/renderer/utils/messageFiles';
+import { Button, Message, Tag } from '@arco-design/web-react';
+import { Plus } from '@icon-park/react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface CodexDraftData {
   _type: 'codex';
@@ -156,12 +156,29 @@ const CodexSendBox: React.FC<{ conversation_id: string }> = ({ conversation_id }
           throttledSetThought(message.data as ThoughtData);
           setAiProcessing(false);
           break;
-        case 'content':
-        case 'codex_permission': {
+        case 'content': {
           setThought({ subject: '', description: '' });
+          const transformedContent = transformMessage(message);
+          if (transformedContent) {
+            addOrUpdateMessage(transformedContent);
+          }
+          break;
+        }
+        case 'codex_permission': {
+          setThought({
+            subject: t('messages.permissionRequest', { defaultValue: 'Awaiting Permission' }),
+            description: t('messages.agentRequestingPermission', { defaultValue: 'Agent is requesting permission.' }),
+          });
+          // Show notification
+          Message.info({
+            content: t('messages.agentRequestingPermission', { defaultValue: 'Agent is requesting permission.' }),
+            duration: 5000,
+          });
           const transformedMessage = transformMessage(message);
           if (transformedMessage) {
-            addOrUpdateMessage(transformedMessage);
+            // Force a new ID to ensure list update
+            const permissionMsg = { ...transformedMessage, id: uuid() };
+            addOrUpdateMessage(permissionMsg, true);
           }
           break;
         }

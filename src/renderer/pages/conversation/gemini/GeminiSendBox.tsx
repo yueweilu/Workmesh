@@ -34,6 +34,7 @@ const useGeminiSendBoxDraft = getSendBoxDraftHook('gemini', {
 });
 
 const useGeminiMessage = (conversation_id: string, onError?: (message: IResponseMessage) => void) => {
+  const { t } = useTranslation();
   const addOrUpdateMessage = useAddOrUpdateMessage();
   const [streamRunning, setStreamRunning] = useState(false); // API 流是否在运行
   const [hasActiveTools, setHasActiveTools] = useState(false); // 是否有工具在执行或等待确认
@@ -155,9 +156,16 @@ const useGeminiMessage = (conversation_id: string, onError?: (message: IResponse
             const confirmingTool = tools.find((tool) => tool.status === 'Confirming');
             if (confirmingTool) {
               setThought({
-                subject: 'Awaiting Confirmation',
+                subject: t('messages.permissionRequest', { defaultValue: 'Awaiting Permission' }),
                 description: confirmingTool.name || 'Tool execution',
               });
+              // 弹出通知提示用户 / Show notification to alert user
+              Message.info({
+                content: t('messages.agentRequestingPermission', { defaultValue: 'Agent is requesting permission.' }),
+                duration: 5000,
+              });
+              // Force scroll to bottom to show the confirmation card
+              emitter.emit('chat.scrollToBottom');
             } else if (hasActive) {
               const executingTool = tools.find((tool) => tool.status === 'Executing');
               if (executingTool) {
@@ -218,7 +226,7 @@ const useGeminiMessage = (conversation_id: string, onError?: (message: IResponse
         }
       }
     });
-  }, [conversation_id, addOrUpdateMessage, hasActiveTools, streamRunning, onError]);
+  }, [conversation_id, addOrUpdateMessage, hasActiveTools, streamRunning, onError, t]);
 
   useEffect(() => {
     setStreamRunning(false);

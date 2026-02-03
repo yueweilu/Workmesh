@@ -1,27 +1,27 @@
 import { ipcBridge } from '@/common';
-import type { AcpBackend } from '@/types/acpTypes';
 import { transformMessage, type TMessage } from '@/common/chatLib';
 import type { IResponseMessage } from '@/common/ipcBridge';
 import { uuid } from '@/common/utils';
+import FilePreview from '@/renderer/components/FilePreview';
+import HorizontalFileList from '@/renderer/components/HorizontalFileList';
 import SendBox from '@/renderer/components/sendbox';
 import ThoughtDisplay, { type ThoughtData } from '@/renderer/components/ThoughtDisplay';
+import { useAutoTitle } from '@/renderer/hooks/useAutoTitle';
+import { useLatestRef } from '@/renderer/hooks/useLatestRef';
 import { getSendBoxDraftHook, type FileOrFolderItem } from '@/renderer/hooks/useSendBoxDraft';
 import { createSetUploadFile, useSendBoxFiles } from '@/renderer/hooks/useSendBoxFiles';
 import { useAddOrUpdateMessage } from '@/renderer/messages/hooks';
+import { usePreviewContext } from '@/renderer/pages/conversation/preview';
 import { allSupportedExts } from '@/renderer/services/FileService';
+import { iconColors } from '@/renderer/theme/colors';
 import { emitter, useAddEventListener } from '@/renderer/utils/emitter';
 import { mergeFileSelectionItems } from '@/renderer/utils/fileSelection';
-import { Button, Tag } from '@arco-design/web-react';
+import { buildDisplayMessage } from '@/renderer/utils/messageFiles';
+import type { AcpBackend } from '@/types/acpTypes';
+import { Button, Message, Tag } from '@arco-design/web-react';
 import { Plus } from '@icon-park/react';
-import { iconColors } from '@/renderer/theme/colors';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import FilePreview from '@/renderer/components/FilePreview';
-import HorizontalFileList from '@/renderer/components/HorizontalFileList';
-import { usePreviewContext } from '@/renderer/pages/conversation/preview';
-import { buildDisplayMessage } from '@/renderer/utils/messageFiles';
-import { useLatestRef } from '@/renderer/hooks/useLatestRef';
-import { useAutoTitle } from '@/renderer/hooks/useAutoTitle';
 
 const useAcpSendBoxDraft = getSendBoxDraftHook('acp', {
   _type: 'acp',
@@ -31,6 +31,7 @@ const useAcpSendBoxDraft = getSendBoxDraftHook('acp', {
 });
 
 const useAcpMessage = (conversation_id: string) => {
+  const { t } = useTranslation();
   const addOrUpdateMessage = useAddOrUpdateMessage();
   const [running, setRunning] = useState(false);
   const [thought, setThought] = useState<ThoughtData>({
@@ -131,9 +132,23 @@ const useAcpMessage = (conversation_id: string) => {
         case 'user_content':
           addOrUpdateMessage(transformedMessage);
           break;
-        case 'acp_permission':
-          addOrUpdateMessage(transformedMessage);
+        case 'acp_permission': {
+          // Update thought to indicate waiting for user
+          setThought({
+            subject: t('messages.permissionRequest', { defaultValue: 'Awaiting Permission' }),
+            description: t('messages.agentRequestingPermission', { defaultValue: 'Agent is requesting permission.' }),
+          });
+          // Show notification
+          Message.info({
+            content: t('messages.agentRequestingPermission', { defaultValue: 'Agent is requesting permission.' }),
+            duration: 5000,
+          });
+
+          // Force a new ID to ensure list update and scroll
+          const permissionMsg = { ...transformedMessage, id: uuid() };
+          addOrUpdateMessage(permissionMsg, true);
           break;
+        }
         case 'error':
           // Stop AI processing state when error occurs
           setAiProcessing(false);
@@ -144,7 +159,7 @@ const useAcpMessage = (conversation_id: string) => {
           break;
       }
     },
-    [conversation_id, addOrUpdateMessage, throttledSetThought, setThought, setRunning, setAiProcessing, setAcpStatus]
+    [conversation_id, addOrUpdateMessage, throttledSetThought, setThought, setRunning, setAiProcessing, setAcpStatus, t]
   );
 
   useEffect(() => {
