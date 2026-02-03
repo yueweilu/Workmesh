@@ -68,19 +68,43 @@ pip3 install requests markdown
 
 ## 配置说明
 
-凭证获取优先级（从高到低）：
+### 配置文件
 
-1. **配置文件**（推荐）：`assets/wechat_config.json`
-   - 通过助手设置界面配置（点击助手卡片上的齿轮图标）
-   - 格式：`{"appId": "YOUR_APP_ID", "appSecret": "YOUR_APP_SECRET"}`
+**推荐方式**：通过 `assets/wechat_config.json` 统一配置（可通过助手设置界面配置）
 
-2. **环境变量**：
-   - `WECHAT_MP_APPID` + `WECHAT_MP_APPSECRET`（使用稳定凭证）
-   - 或 `WECHAT_MP_ACCESS_TOKEN`（直接使用 token）
+配置文件格式：
 
-3. **IP 白名单**：
-   - 服务器出口 IP 需加入公众号平台"开发者中心"IP 白名单
-   - 否则会出现凭证或接口调用失败
+```json
+{
+  "appId": "YOUR_APP_ID",
+  "appSecret": "YOUR_APP_SECRET"
+}
+```
+
+**字段说明**：
+
+1. **appId** 和 **appSecret**（必填）：
+   - 微信公众号的 AppID 和 AppSecret
+   - 用于获取 access_token 调用微信 API
+
+### 凭证获取优先级
+
+**微信公众号凭证**（从高到低）：
+
+1. **配置文件**：`assets/wechat_config.json` 中的 `appId` 和 `appSecret`
+2. **环境变量**：`WECHAT_MP_APPID` + `WECHAT_MP_APPSECRET`
+3. **环境变量**：`WECHAT_MP_ACCESS_TOKEN`（直接使用 token）
+
+**Unsplash 图片搜索凭证**（从高到低）：
+
+1. **配置文件**：`assets/wechat_config.json` 中的 `unsplashAccessKey`
+2. **环境变量**：`UNSPLASH_ACCESS_KEY`
+
+### 其他要求
+
+- **IP 白名单**：
+  - 服务器出口 IP 需加入公众号平台"开发者中心"IP 白名单
+  - 否则会出现凭证或接口调用失败
 
 ## 快速开始
 
@@ -95,33 +119,162 @@ python3 -c "import requests, markdown" 2>/dev/null || pip3 install requests mark
 
 发布单图文（news）：
 
+#### 图片配置说明
+
+系统支持多种图片来源，**优先级从高到低**：
+
+1. **用户提供的封面图片**
+   - 使用 `--cover` 参数指定本地图片路径
+   - 支持 JPG、PNG 等常见格式
+   - 图片会自动上传到微信服务器
+   - 适合需要精确控制封面样式的场景
+
+2. **用户素材库**（推荐）
+   - 使用 `--material-dir` 参数指定素材库目录路径
+   - 系统会从目录中选择图片作为封面和正文配图
+   - 支持 JPG、JPEG、PNG、GIF、BMP、WEBP 格式
+   - 自动防止重复使用同一张图片
+   - 适合有自己素材库的用户
+
+3. **自动搜索匹配的图片**（默认，无需 API Key）
+   - 不提供 `--cover` 或 `--material-dir` 参数时自动触发
+   - 系统会从文章标题和内容中提取关键词
+   - 自动从免费图片源（Pexels + Lorem Picsum）获取高质量图片
+   - 完全免费，无需任何 API Key 或配置
+   - 智能防止封面和正文图片重复
+   - 适合快速发布或没有现成素材的场景
+
+**注意**：微信公众号的 news 类型文章必须包含封面图片，因此系统会自动确保至少有一张封面图（通过用户提供、素材库或自动搜索）
+
+#### 使用示例
+
+**方式 1：使用用户提供的封面图片**
+
 ```bash
 python scripts/publish_article.py \
-  --title "标题" \
-  --author "作者" \
-  --digest "摘要" \
+  --title "AI 正在重塑职场：5 种你必须知道的工作方式变革" \
+  --author "作者名" \
+  --digest "探索人工智能如何改变我们的工作方式" \
   --content-file ./article.md \
-  --cover ./cover.jpg
+  --cover ./my_cover.jpg
 ```
+
+**方式 2：使用用户素材库**
+
+```bash
+python scripts/publish_article.py \
+  --title "AI 正在重塑职场：5 种你必须知道的工作方式变革" \
+  --author "作者名" \
+  --digest "探索人工智能如何改变我们的工作方式" \
+  --content-file ./article.md \
+  --material-dir ./my_materials
+```
+
+系统会自动：
+
+1. 从素材库目录中选择图片作为封面
+2. 为正文章节选择不同的图片（自动防止重复）
+3. 上传图片到微信服务器
+4. 如果素材库图片不足，自动回退到搜索模式
+
+**方式 3：自动搜索匹配的图片（默认）**
+
+```bash
+python scripts/publish_article.py \
+  --title "AI 正在重塑职场：5 种你必须知道的工作方式变革" \
+  --author "作者名" \
+  --digest "探索人工智能如何改变我们的工作方式" \
+  --content-file ./article.md
+```
+
+系统会自动：
+
+1. 从文章标题和内容中提取关键词（如 "artificial intelligence", "workplace"）
+2. 从免费图片源（Pexels + Lorem Picsum）搜索匹配的高质量图片
+3. 智能防止封面和正文使用相同关键词（避免重复图片）
+4. 下载并上传为封面和正文配图
+5. 发布成功后自动删除本地下载的图片
+
+#### 正文配图说明
+
+系统会自动在文章正文中插入相关配图：
+
+- **插入策略**：
+  - 3-4 个章节：在第 2 个章节后插入 1 张图片
+  - ≥5 个章节：在第 2 和第 4 个章节后各插入 1 张图片
+- **关键词提取**：从每个章节的标题和内容中提取关键词
+- **自动清理**：发布成功后自动删除所有下载的图片
+- **禁用选项**：使用 `--no-content-images` 参数可禁用正文配图
 
 **Note**: Always check dependencies before running scripts to avoid errors.
 
-## 草稿
+## 草稿管理
 
-- 新增草稿（支持 news 与 newspic）
+### 新增草稿
+
+支持 news（图文消息）与 newspic（图片消息）两种类型。
+
+#### 图片配置说明
+
+与发布文章相同，草稿也支持多种图片来源（参见上文"图片配置说明"）。
+
+#### 使用示例
+
+**方式 1：使用用户提供的封面图片**
+
+```bash
+python scripts/add_draft.py \
+  --type news \
+  --title "AI 正在重塑职场：5 种你必须知道的工作方式变革" \
+  --author "作者名" \
+  --digest "探索人工智能如何改变我们的工作方式" \
+  --content-file ./article.md \
+  --content-source-url https://example.com/source \
+  --cover ./my_cover.jpg
+```
+
+可选参数（封面裁剪）：
+
+```bash
+  --pic-crop-235-1 0.1945_0_1_0.5236 \
+  --pic-crop-1-1 0.166454_0_0.833545_1
+```
+
+**方式 2：使用用户素材库**
+
+```bash
+python scripts/add_draft.py \
+  --type news \
+  --title "AI 正在重塑职场：5 种你必须知道的工作方式变革" \
+  --author "作者名" \
+  --digest "探索人工智能如何改变我们的工作方式" \
+  --content-file ./article.md \
+  --material-dir ./my_materials
+```
+
+**方式 3：自动搜索图片（默认）**
+
+```bash
+python scripts/add_draft.py \
+  --type news \
+  --title "AI 正在重塑职场：5 种你必须知道的工作方式变革" \
+  --author "作者名" \
+  --digest "探索人工智能如何改变我们的工作方式" \
+  --content-file ./article.md
+```
+
+**方式 4：禁用正文配图**
 
 ```bash
 python scripts/add_draft.py \
   --type news \
   --title "标题" \
-  --author "作者" \
-  --digest "摘要" \
   --content-file ./article.md \
-  --content-source-url https://example.com/source \
-  --cover ./cover.jpg \
-  --pic-crop-235-1 0.1945_0_1_0.5236 \
-  --pic-crop-1-1 0.166454_0_0.833545_1
+  --cover ./my_cover.jpg \
+  --no-content-images
 ```
+
+使用 `--no-content-images` 参数可以只使用封面图片，不在正文中插入配图。
 
 ```bash
 python scripts/add_draft.py \
@@ -141,10 +294,28 @@ python scripts/list_drafts.py --offset 0 --count 10 --no-content 1
 
 ## 行为与约束
 
-- 自动上传封面为永久素材并生成 thumb_media_id
-- 自动解析并上传内容中的本地图片为有效 URL
-- 成功后返回发布任务信息（publish_id、msg_data_id）
-- Markdown 内容会自动转换为 HTML 格式
+- **智能图片处理**（优先级从高到低）：
+  1. **用户提供的封面**：通过 `--cover` 参数指定本地图片路径
+  2. **用户素材库**：通过 `--material-dir` 参数指定素材库目录，系统自动选择图片
+     - 自动防止重复使用同一张图片（封面和正文配图不重复）
+     - 如果素材库图片不足，自动回退到搜索模式
+  3. **自动搜索匹配**（默认）：从文章内容提取关键词并搜索匹配的高质量图片
+     - 智能防止封面和正文使用相同关键词（避免重复图片）
+     - 完全免费，无需任何 API Key
+  - **注意**：微信公众号的 news 类型文章必须包含封面图片
+  - 自动上传封面为永久素材并生成 thumb_media_id
+- **正文配图**：
+  - 默认自动在正文章节中插入相关配图
+  - 使用 `--no-content-images` 参数可禁用正文配图（仅保留封面）
+  - 支持素材库和自动搜索两种模式
+- **图片处理**：
+  - 自动解析并上传内容中的本地图片为有效 URL
+  - 支持 Markdown 中的图片引用自动转换
+  - 发布成功后自动删除下载的临时图片
+- **内容转换**：
+  - Markdown 内容会自动转换为 HTML 格式
+- **发布结果**：
+  - 成功后返回发布任务信息（publish_id、msg_data_id）
 
 ## 内容创作指南
 

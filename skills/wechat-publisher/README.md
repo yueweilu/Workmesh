@@ -40,6 +40,8 @@ export WECHAT_MP_APPSECRET="YOUR_APP_SECRET"
 
 ### 3. 发布文章
 
+**方式 1：使用自己的封面图片**
+
 ```bash
 python3 scripts/publish_article.py \
   --title "我的第一篇文章" \
@@ -49,12 +51,43 @@ python3 scripts/publish_article.py \
   --cover examples/cover.jpg
 ```
 
+**方式 2：使用素材库（推荐）**
+
+```bash
+python3 scripts/publish_article.py \
+  --title "我的第一篇文章" \
+  --author "作者名" \
+  --digest "文章摘要" \
+  --content-file examples/article.md \
+  --material-dir ./my_materials
+```
+
+**方式 3：自动搜索图片（默认）**
+
+```bash
+python3 scripts/publish_article.py \
+  --title "我的第一篇文章" \
+  --author "作者名" \
+  --digest "文章摘要" \
+  --content-file examples/article.md
+```
+
+系统会自动从文章内容提取关键词，搜索匹配的高质量图片作为封面和正文配图。
+
 ## 功能特性
 
 - ✅ 支持 Markdown 自动转 HTML
 - ✅ 自动上传本地图片到微信服务器
 - ✅ 自动创建草稿并发布
-- ✅ 支持封面图片上传
+- ✅ **智能图片配置**：
+  - 支持用户提供的封面图片
+  - 支持用户素材库（自动防止重复）
+  - 支持自动搜索匹配图片（无需 API Key）
+  - 支持纯文本模式（草稿）
+- ✅ **正文自动配图**：
+  - 智能提取章节关键词
+  - 自动防止封面和正文图片重复
+  - 支持素材库和自动搜索两种模式
 - ✅ 支持评论设置
 - ✅ 完整的草稿管理功能
 
