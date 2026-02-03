@@ -204,8 +204,8 @@ const Layout: React.FC<{
               })}
             >
               <div
-                className={classNames('bg-black shrink-0 size-40px relative rd-0.5rem', {
-                  '!size-24px': collapsed,
+                className={classNames('bg-black shrink-0 size-32px relative rd-0.5rem', {
+                  '!size-20px': collapsed,
                 })}
                 onClick={onClick}
               >
