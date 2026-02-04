@@ -6,10 +6,9 @@ permissions:
   pull-requests: read
 
 on:
-  push:
-    branches: [ main, dev, master ]
+  # push:
+  #   branches: [ main, dev, master ]
   workflow_dispatch: # Allow manual trigger
-
 jobs:
   # 代码质量检查
   code-quality:
