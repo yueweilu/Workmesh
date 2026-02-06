@@ -92,7 +92,15 @@ module.exports = async function afterPack(context) {
 
   // Modules that need to be rebuilt for cross-compilation
   // Use platform-specific module list (Windows skips node-pty due to cross-compilation issues)
-  const modulesToRebuild = getModulesToRebuild(electronPlatformName);
+  let modulesToRebuild = getModulesToRebuild(electronPlatformName);
+  
+  // For Windows cross-compilation from macOS ARM64 to x64, skip bcrypt
+  // bcrypt doesn't support this cross-compilation and will use fallback JS implementation
+  if (electronPlatformName === 'win32' && isCrossCompile && buildArch === 'arm64' && targetArch === 'x64') {
+    console.log(`   ⚠️  Skipping bcrypt for macOS ARM64 → Windows x64 cross-compilation`);
+    modulesToRebuild = modulesToRebuild.filter(m => m !== 'bcrypt');
+  }
+  
   console.log(`   Modules to rebuild: ${modulesToRebuild.join(', ')}`);
 
   // For cross-compilation, clean up build artifacts from the wrong architecture
