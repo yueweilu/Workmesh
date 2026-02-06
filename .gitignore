@@ -94,6 +94,10 @@ CLAUDE.md
 AGENTS.md
 GEMINI.md
 
+# Electron cache files (literal directory name with ${env.ELECTRON_CACHE})
+\${env.ELECTRON_CACHE}/
+${env.ELECTRON_CACHE}/
+
 
 # IDE and Editor files
 .idea
