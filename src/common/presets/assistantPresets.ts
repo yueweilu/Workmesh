@@ -179,4 +179,22 @@ export const ASSISTANT_PRESETS: AssistantPreset[] = [
       'zh-CN': '你的微信公众号发布助手。支持发布 Markdown 文章为草稿或直接群发。',
     },
   },
+  {
+    id: 'daily-customer-additions',
+    avatar: '📊',
+    presetAgentType: 'gemini',
+    resourceDir: 'assistant/daily-customer-additions',
+    ruleFiles: {
+      'en-US': 'daily-customer-additions.md',
+      'zh-CN': 'daily-customer-additions.zh-CN.md',
+    },
+    nameI18n: {
+      'en-US': 'Daily Customer Additions',
+      'zh-CN': '每日新增客户助手',
+    },
+    descriptionI18n: {
+      'en-US': 'Query daily new customer information with natural language dates. Filter by sales representative and view follow-up status.',
+      'zh-CN': '查询每日新增客户信息，支持自然语言日期。可按销售人员筛选并查看跟进情况。',
+    },
+  },
 ];

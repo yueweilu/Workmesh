@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import type { TMessage } from '@/common/chatLib';
+import { ASSISTANT_PRESETS } from '@/common/presets/assistantPresets';
+import type { AcpBackendConfig } from '@/types/acpTypes';
+import { app } from 'electron';
 import { mkdirSync as _mkdirSync, existsSync, readdirSync, readFileSync } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
-import { app } from 'electron';
 import { application } from '../common/ipcBridge';
-import type { TMessage } from '@/common/chatLib';
-import { ASSISTANT_PRESETS } from '@/common/presets/assistantPresets';
 import type { IChatConversationRefer, IConfigStorageRefer, IEnvStorageRefer, IMcpServer, TChatConversation, TProviderWithModel } from '../common/storage';
 import { ChatMessageStorage, ChatStorage, ConfigStorage, EnvStorage } from '../common/storage';
-import { copyDirectoryRecursively, getCliSafePath, getConfigPath, getDataPath, getTempPath, verifyDirectoryFiles } from './utils';
 import { getDatabase } from './database/export';
-import type { AcpBackendConfig } from '@/types/acpTypes';
+import { copyDirectoryRecursively, getCliSafePath, getConfigPath, getDataPath, getTempPath, verifyDirectoryFiles } from './utils';
 // Platform and architecture types (moved from deleted updateConfig)
 type PlatformType = 'win32' | 'darwin' | 'linux';
 type ArchitectureType = 'x64' | 'arm64' | 'ia32' | 'arm';
@@ -520,7 +520,7 @@ const getBuiltinAssistants = (): AcpBackendConfig[] => {
 
   for (const preset of ASSISTANT_PRESETS) {
     // Cowork 默认启用的技能列表 / Default enabled skills for Cowork
-    const defaultEnabledSkills = preset.id === 'cowork' ? ['skill-creator', 'pptx', 'docx', 'pdf', 'xlsx'] : preset.id === 'weather-lookup' ? ['weather-lookup'] : preset.id === 'wechat-publisher' ? ['wechat-publisher'] : undefined;
+    const defaultEnabledSkills = preset.id === 'cowork' ? ['skill-creator', 'pptx', 'docx', 'pdf', 'xlsx'] : preset.id === 'weather-lookup' ? ['weather-lookup'] : preset.id === 'wechat-publisher' ? ['wechat-publisher'] : preset.id === 'daily-customer-additions' ? ['daily-customer-additions'] : undefined;
 
     assistants.push({
       id: `builtin-${preset.id}`,
